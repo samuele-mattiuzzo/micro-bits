@@ -58,21 +58,11 @@ def game_loop():
     obstacle = OBSTACLE_START
     game_area = setup()
 
-    start_time = 0
-    total_game_time = 0
-
     score = 0  # 1 obstacle = 1 point
     steps = 0
     start_time = running_time()
 
     while lives > 0:
-        
-        # - every SPEED seconds, update the game area (scroll down) + append PLAYER
-        # - if obstacle_pos = player_pos -> check for death
-        # - if alive, score + 1, reset spacing
-        # - if time elapsed is multiple of 60, increase speed by 10%
-        # - when lives = 0, show scores
-
         # check for player input
         if button_a.is_pressed():  # left
             if player_pos > 0: player_pos -= 1
@@ -82,6 +72,7 @@ def game_loop():
         # update the player
         player = move_player(player_pos)
 
+        # check and update the obstacle
         if ((running_time() - start_time) / MS) % CHECK_TIME >= 0:
             # reset the timer
             start_time = running_time()
@@ -108,10 +99,11 @@ def game_loop():
 
     display.show(Image.SKULL)
     display.scroll("Score: " + str(score))
+    sleep(10 * MS)
     display.clear()
 
 
 # MAIN
-#logo()
+logo()
 #start_loop()
 game_loop()
