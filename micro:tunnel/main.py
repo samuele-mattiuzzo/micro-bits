@@ -1,18 +1,18 @@
-from microbit import *
-import random
-
-pin2.set_touch_mode(pin2.CAPACITIVE)  # start button
+from microbit import Image, display, sleep, button_a, button_b
+import speech, random
 
 # CONSTANTS
 GAME_NAME = "micro:tunnel"
-MS = 1000  # 1 millisecond
-CHECK_TIME = 1 * MS  # speed, in seconds
-SPACING = 5  # how many steps to wait before the next obstacle
+MS = 1000  # 1000 milliseconds = 1 second
+TICK_TIME = 100  # 100 milliseconds
+TICKS_TO_SECOND = 10  # 100ms * 10 = 1 second
 
 OBSTACLE_START = "88088:"
 PLAYER_START = "00500:"
 BLANK = "00000:"
 
+
+# GAME FUNCTIONS
 def setup():
     # creates the start
     return OBSTACLE_START + BLANK * 3 + PLAYER_START
@@ -41,15 +41,8 @@ def logo():
     display.scroll(GAME_NAME)
     sleep(3 * MS)
 
-def start_loop():
-    while True:
-        # waits for start to be pressed
-        display.scroll("Press start (pin 3)")
-        if pin2.is_touched(): break
-        sleep(1 * MS)
-
 def game_loop():
-    # SESSION CONF
+    # new game
     lives = 3  # hit the wall => decrease
     player_pos = 2  # initial position, horizontal
     obstacle_pos = 0  # initial position, vertical
@@ -58,9 +51,7 @@ def game_loop():
     obstacle = OBSTACLE_START
     game_area = setup()
 
-    score = 0  # 1 obstacle = 1 point
-    steps = 0
-    start_time = running_time()
+    ticks = score = 0
 
     while lives > 0:
         # check for player input
@@ -72,38 +63,38 @@ def game_loop():
         # update the player
         player = move_player(player_pos)
 
-        # check and update the obstacle
-        if ((running_time() - start_time) / MS) % CHECK_TIME >= 0:
-            # reset the timer
-            start_time = running_time()
-            steps += 1
-
-            # move the obstacle down
-            if steps < SPACING:
-                obstacle_pos = obstacle_pos + 1 if obstacle_pos < 5 else obstacle_pos
-            else:
-                steps = 0
+        # update the obstacle
+        if ticks == TICKS_TO_SECOND:
+            # 1 second elapsed, move down
+            obstacle_pos = obstacle_pos + 1 if obstacle_pos < 5 else obstacle_pos
+            
+            # collision check
+            if obstacle_pos == 4:
+                if obstacle[player_pos] == "0":  # hole!
+                    score += 1
+                    speech.say("Nice")
+                else:
+                    lives -= 1
+                    speech.say("Ouch")
+                
                 obstacle_pos = 0  # reset the obstacle
                 obstacle = new_obstacle()
+            ticks = 0
+        else:
+            # regular tick, don't change the obstacle, increase the ticks count
+            ticks += 1
 
         # update the game area
         game_area = next_step(obstacle, player, obstacle_pos)
         display.show(Image(game_area))
-
-        # collision check
-        if obstacle_pos == 4:
-            if obstacle[player_pos] == "0":  # hole!
-                score += 1
-            else:
-                lives -= 1
+        sleep(TICK_TIME)
 
     display.show(Image.SKULL)
+    sleep(3 * MS)
     display.scroll("Score: " + str(score))
-    sleep(10 * MS)
+    sleep(5 * MS)
     display.clear()
-
 
 # MAIN
 logo()
-#start_loop()
 game_loop()
