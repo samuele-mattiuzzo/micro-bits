@@ -66,7 +66,7 @@ def game_loop():
         # update the obstacle
         if ticks == TICKS_TO_SECOND:
             # 1 second elapsed, move down
-            obstacle_pos = obstacle_pos + 1 if obstacle_pos < 5 else obstacle_pos
+            obstacle_pos = obstacle_pos + 1 if obstacle_pos < 4
             
             # collision check
             if obstacle_pos == 4:
